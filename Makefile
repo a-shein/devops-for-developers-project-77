@@ -1,4 +1,4 @@
-.PHONY: backend secrets init plan apply destroy vault-edit inventory prepare deploy
+.PHONY: backend secrets init plan apply destroy vault-edit inventory prepare deploy check-domain
 
 # Локальное S3-хранилище стейта (MinIO вместо Yandex Object Storage)
 backend:
@@ -35,3 +35,9 @@ prepare: inventory
 
 deploy: inventory
 	ansible-playbook -i ansible/inventory.ini ansible/playbook.yml --tags deploy
+
+# Проверка домена: A-запись в локальном DNS и HTTPS по домену с проверкой сертификата
+check-domain:
+	dig +short @127.0.0.1 -p 5300 project77.test
+	cd terraform && terraform output -raw lb_certificate > ../lb.crt
+	curl -s --cacert lb.crt --resolve project77.test:8443:127.0.0.1 -o /dev/null -w '%{http_code}\n' https://project77.test:8443/

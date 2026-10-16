@@ -1,0 +1,7 @@
+$ORIGIN ${domain}.
+$TTL 300
+@   IN SOA ns.${domain}. admin.${domain}. 1 3600 600 86400 300
+@   IN NS  ns.${domain}.
+ns  IN A   ${lb_ip}
+@   IN A   ${lb_ip}
+www IN CNAME ${domain}.

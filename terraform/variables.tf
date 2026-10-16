@@ -21,3 +21,15 @@ variable "lb_https_port" {
   type        = number
   default     = 8443
 }
+
+variable "lb_ip" {
+  description = "IP балансировщика, на который указывает A-запись домена"
+  type        = string
+  default     = "127.0.0.1"
+}
+
+variable "dns_port" {
+  description = "Порт хоста локального DNS-сервера"
+  type        = number
+  default     = 5300
+}

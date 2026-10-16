@@ -52,6 +52,14 @@ make destroy   # удалить инфраструктуру
 
 Результат: `https://localhost:8443` (балансировщик, сертификат самоподписанный), прямые адреса серверов — `http://localhost:8081`, `http://localhost:8082`. Первый запуск Redmine занимает около минуты.
 
+## Домен
+
+Приложение доступно по домену: **https://project77.test:8443**
+
+Реальный домен не регистрировался (платно), используется зарезервированная зона `project77.test`. Terraform поднимает локальный DNS-сервер (CoreDNS, `terraform/dns.tf`) с A-записью домена на балансировщик, а сертификат балансировщика выписан на этот домен. `make check-domain` проверяет запись через `dig` и HTTPS-запрос с проверкой сертификата.
+
+Чтобы открыть домен в браузере, добавьте его в hosts: `echo "127.0.0.1 project77.test" | sudo tee -a /etc/hosts`
+
 Секреты: `make vault-edit` правит `ansible/vault.yml`; `ansible/secrets.yml` рендерит `terraform/secrets.auto.tfvars` (файл в `.gitignore`).
 
 ---

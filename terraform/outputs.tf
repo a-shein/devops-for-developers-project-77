@@ -15,3 +15,13 @@ output "ansible_inventory" {
     db_host = docker_container.db.network_data[0].ip_address
   })
 }
+
+output "domain_url" {
+  description = "Адрес приложения по домену (A-запись указывает на балансировщик)"
+  value       = "https://${var.domain}:${var.lb_https_port}"
+}
+
+output "lb_certificate" {
+  description = "Сертификат балансировщика (для проверки curl --cacert)"
+  value       = tls_self_signed_cert.lb.cert_pem
+}
