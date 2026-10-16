@@ -65,6 +65,8 @@ make destroy   # удалить инфраструктуру
 
 Агент Datadog ставится на серверы через Ansible (`make monitoring`) и каждые 15 секунд делает HTTP-запрос к приложению (`http_check`). Terraform (`terraform/monitoring.tf`) создаёт в Datadog по монитору `http.can_connect` на каждый сервер. Ключи `vault_dd_api_key` и `vault_dd_app_key` хранятся в `ansible/vault.yml`, сайт Datadog задаётся `dd_site` (`ansible/group_vars/webservers.yml`) и `dd_api_url` (Terraform).
 
+Внешний мониторинг доступности (Upmon) не подключён: приложение работает локально и недоступно из интернета.
+
 Секреты: `make vault-edit` правит `ansible/vault.yml`; `ansible/secrets.yml` рендерит `terraform/secrets.auto.tfvars` (файл в `.gitignore`).
 
 ---
