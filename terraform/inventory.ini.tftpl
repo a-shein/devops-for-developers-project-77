@@ -1,0 +1,9 @@
+[webservers]
+%{ for s in servers ~}
+${s.name} docker_host=tcp://127.0.0.1:${s.api_port}
+%{ endfor ~}
+
+[webservers:vars]
+ansible_connection=local
+ansible_python_interpreter=/usr/bin/python3
+db_host=${db_host}

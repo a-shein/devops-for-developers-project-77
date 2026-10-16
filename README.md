@@ -17,7 +17,7 @@
 
 ## Инфраструктура
 
-- 2 веб-сервера с приложением (Redmine) — `project77-app1`, `project77-app2`
+- 2 веб-сервера — `project77-app1`, `project77-app2` (контейнеры `docker:dind`, у каждого свой Docker-демон; приложение Redmine на них деплоит Ansible)
 - балансировщик нагрузки (nginx) с HTTPS и самоподписанным сертификатом — `project77-lb`
 - база данных PostgreSQL — `project77-db`
 
@@ -43,8 +43,12 @@ make backend   # поднять MinIO для стейта (один раз)
 make init      # сгенерировать secrets.auto.tfvars из vault и terraform init
 make plan      # посмотреть изменения
 make apply     # создать инфраструктуру
+make prepare   # инвентори из Terraform, коллекции Ansible, образ приложения на серверах
+make deploy    # запустить приложение на серверах (ansible/playbook.yml, --tags deploy)
 make destroy   # удалить инфраструктуру
 ```
+
+Порядок: `make backend`, `make init`, `make apply`, `make prepare`, `make deploy`. Пароль БД берётся из зашифрованного `ansible/vault.yml`.
 
 Результат: `https://localhost:8443` (балансировщик, сертификат самоподписанный), прямые адреса серверов — `http://localhost:8081`, `http://localhost:8082`. Первый запуск Redmine занимает около минуты.
 

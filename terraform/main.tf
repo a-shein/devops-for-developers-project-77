@@ -7,8 +7,10 @@ resource "docker_image" "postgres" {
   keep_locally = true
 }
 
-resource "docker_image" "app" {
-  name         = "redmine:5"
+# «Виртуальные машины» — контейнеры docker:dind: у каждой свой Docker-демон,
+# в который Ansible затем деплоит приложение (по API на 127.0.0.1:2375+N).
+resource "docker_image" "server" {
+  name         = "docker:27-dind"
   keep_locally = true
 }
 
@@ -30,18 +32,22 @@ resource "docker_container" "db" {
 }
 
 resource "docker_container" "app" {
-  count   = var.app_count
-  name    = "project77-app${count.index + 1}"
-  image   = docker_image.app.image_id
-  restart = "always"
+  count      = var.app_count
+  name       = "project77-app${count.index + 1}"
+  image      = docker_image.server.image_id
+  restart    = "always"
+  privileged = true
 
-  env = [
-    "REDMINE_DB_POSTGRES=db",
-    "REDMINE_DB_DATABASE=redmine",
-    "REDMINE_DB_USERNAME=redmine",
-    "REDMINE_DB_PASSWORD=${var.db_password}",
-  ]
+  env = ["DOCKER_TLS_CERTDIR="]
 
+  # Docker API сервера — только с localhost, для Ansible
+  ports {
+    internal = 2375
+    external = 2375 + count.index
+    ip       = "127.0.0.1"
+  }
+
+  # Порт приложения, которое Ansible запустит внутри сервера
   ports {
     internal = 3000
     external = 8081 + count.index
@@ -50,6 +56,4 @@ resource "docker_container" "app" {
   networks_advanced {
     name = docker_network.infra.name
   }
-
-  depends_on = [docker_container.db]
 }

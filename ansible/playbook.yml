@@ -1,0 +1,42 @@
+# Подготовка серверов: ждём Docker-демон и скачиваем образ приложения.
+# Запускается только `make prepare`.
+- hosts: webservers
+  gather_facts: false
+  tags: [prepare]
+  vars_files: [vault.yml]
+  tasks:
+    - name: Wait for Docker daemon of the server
+      community.docker.docker_host_info:
+        docker_host: "{{ docker_host }}"
+      register: docker_ready
+      until: docker_ready is succeeded
+      retries: 30
+      delay: 3
+
+    - name: Pull application image
+      community.docker.docker_image:
+        name: "{{ app_image }}"
+        source: pull
+        docker_host: "{{ docker_host }}"
+
+# Деплой приложения: только запуск контейнера на каждом сервере.
+# Запускается только `make deploy`.
+- hosts: webservers
+  gather_facts: false
+  tags: [deploy]
+  vars_files: [vault.yml]
+  tasks:
+    - name: Run application container
+      community.docker.docker_container:
+        name: redmine
+        image: "{{ app_image }}"
+        docker_host: "{{ docker_host }}"
+        restart_policy: always
+        state: started
+        ports:
+          - "3000:3000"
+        env:
+          REDMINE_DB_POSTGRES: "{{ db_host }}"
+          REDMINE_DB_DATABASE: redmine
+          REDMINE_DB_USERNAME: redmine
+          REDMINE_DB_PASSWORD: "{{ vault_db_password }}"

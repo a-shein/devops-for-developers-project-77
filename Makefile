@@ -1,4 +1,4 @@
-.PHONY: backend secrets init plan apply destroy vault-edit
+.PHONY: backend secrets init plan apply destroy vault-edit inventory prepare deploy
 
 # Локальное S3-хранилище стейта (MinIO вместо Yandex Object Storage)
 backend:
@@ -23,3 +23,15 @@ destroy: secrets
 
 vault-edit:
 	ansible-vault edit ansible/vault.yml
+
+# Инвентори Ansible из значений Terraform
+inventory:
+	cd terraform && terraform output -raw ansible_inventory > ../ansible/inventory.ini
+
+# Подготовка серверов (ждём Docker, тянем образ) и деплой приложения
+prepare: inventory
+	ansible-galaxy collection install -r ansible/requirements.yml
+	ansible-playbook -i ansible/inventory.ini ansible/playbook.yml --tags prepare
+
+deploy: inventory
+	ansible-playbook -i ansible/inventory.ini ansible/playbook.yml --tags deploy
