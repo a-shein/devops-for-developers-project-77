@@ -1,4 +1,4 @@
-.PHONY: backend secrets init plan apply destroy
+.PHONY: backend secrets init plan apply destroy vault-edit
 
 # Локальное S3-хранилище стейта (MinIO вместо Yandex Object Storage)
 backend:
@@ -20,3 +20,6 @@ apply: secrets
 
 destroy: secrets
 	cd terraform && terraform destroy
+
+vault-edit:
+	ansible-vault edit ansible/vault.yml

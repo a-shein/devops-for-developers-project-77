@@ -9,20 +9,46 @@
 
 ## Стек
 
-- Инструменты
+- Terraform (провайдеры `kreuzwerker/docker`, `hashicorp/tls`)
+- Ansible + Ansible Vault (генерация секретов для Terraform)
+- Docker, MinIO (удалённый S3-стейт)
+
+Облако не используется: серверы — контейнеры Docker на локальной машине, стейт хранится в локальном MinIO (S3-совместимое хранилище, замена Yandex Object Storage).
+
+## Инфраструктура
+
+- 2 веб-сервера с приложением (Redmine) — `project77-app1`, `project77-app2`
+- балансировщик нагрузки (nginx) с HTTPS и самоподписанным сертификатом — `project77-lb`
+- база данных PostgreSQL — `project77-db`
 
 ## Установка
-
-<!-- Опишите установку: клонирование, зависимости, переменные окружения -->
 
 ```bash
 git clone https://github.com/a-shein/devops-for-developers-project-77.git
 cd devops-for-developers-project-77
 ```
 
+Нужны: Docker, Ansible, Terraform. Файл `.vault_pass` с паролем Vault лежит в корне (не в репозитории).
+Для Terraform backend задайте ключи MinIO:
+
+```bash
+export AWS_ACCESS_KEY_ID=tfstate
+export AWS_SECRET_ACCESS_KEY=<секрет>
+```
+
 ## Использование
 
-<!-- Добавьте примеры запуска и запись asciinema — именно это смотрит работодатель -->
+```bash
+make backend   # поднять MinIO для стейта (один раз)
+make init      # сгенерировать secrets.auto.tfvars из vault и terraform init
+make plan      # посмотреть изменения
+make apply     # создать инфраструктуру
+make destroy   # удалить инфраструктуру
+```
+
+Результат: `https://localhost:8443` (балансировщик, сертификат самоподписанный), прямые адреса серверов — `http://localhost:8081`, `http://localhost:8082`. Первый запуск Redmine занимает около минуты.
+
+Секреты: `make vault-edit` правит `ansible/vault.yml`; `ansible/secrets.yml` рендерит `terraform/secrets.auto.tfvars` (файл в `.gitignore`).
 
 ---
 

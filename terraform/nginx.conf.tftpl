@@ -1,0 +1,18 @@
+upstream app {
+%{ for b in backends ~}
+    server ${b};
+%{ endfor ~}
+}
+
+server {
+    listen 443 ssl;
+    ssl_certificate     /etc/nginx/ssl/tls.crt;
+    ssl_certificate_key /etc/nginx/ssl/tls.key;
+
+    location / {
+        proxy_pass http://app;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
