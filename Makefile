@@ -1,4 +1,4 @@
-.PHONY: backend secrets init plan apply destroy vault-edit inventory prepare deploy check-domain
+.PHONY: backend secrets init plan apply destroy vault-edit inventory prepare deploy check-domain monitoring
 
 # Локальное S3-хранилище стейта (MinIO вместо Yandex Object Storage)
 backend:
@@ -41,3 +41,7 @@ check-domain:
 	dig +short @127.0.0.1 -p 5300 project77.test
 	cd terraform && terraform output -raw lb_certificate > ../lb.crt
 	curl -s --cacert lb.crt --resolve project77.test:8443:127.0.0.1 -o /dev/null -w '%{http_code}\n' https://project77.test:8443/
+
+# Агент Datadog на серверах (ключи — в ansible/vault.yml, `make vault-edit`)
+monitoring: inventory
+	ansible-playbook -i ansible/inventory.ini ansible/playbook.yml --tags monitoring

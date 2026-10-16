@@ -33,3 +33,25 @@ variable "dns_port" {
   type        = number
   default     = 5300
 }
+
+variable "monitoring_enabled" {
+  description = "Создавать мониторы Datadog (нужны реальные ключи в vault)"
+  type        = bool
+  default     = true
+}
+
+variable "dd_api_key" {
+  type      = string
+  sensitive = true
+}
+
+variable "dd_app_key" {
+  type      = string
+  sensitive = true
+}
+
+variable "dd_api_url" {
+  description = "API Datadog для вашего сайта (например https://api.datadoghq.eu/)"
+  type        = string
+  default     = "https://api.datadoghq.com/"
+}

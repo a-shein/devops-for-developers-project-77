@@ -40,3 +40,51 @@
           REDMINE_DB_DATABASE: redmine
           REDMINE_DB_USERNAME: redmine
           REDMINE_DB_PASSWORD: "{{ vault_db_password }}"
+
+# Мониторинг: агент Datadog на каждом сервере с проверкой http_check приложения.
+# Запускается только `make monitoring`.
+- hosts: webservers
+  gather_facts: false
+  tags: [monitoring]
+  vars_files: [vault.yml]
+  tasks:
+    - name: Remove previous Datadog agent container
+      community.docker.docker_container:
+        name: datadog-agent
+        docker_host: "{{ docker_host }}"
+        state: absent
+
+    - name: Create Datadog agent container
+      community.docker.docker_container:
+        name: datadog-agent
+        image: "gcr.io/datadoghq/agent:7"
+        docker_host: "{{ docker_host }}"
+        state: started
+        network_mode: host
+        restart_policy: always
+        env:
+          DD_API_KEY: "{{ vault_dd_api_key }}"
+          DD_SITE: "{{ dd_site }}"
+          DD_HOSTNAME: "{{ inventory_hostname }}"
+        volumes:
+          - /var/run/docker.sock:/var/run/docker.sock:ro
+
+    - name: Copy http_check config into the agent
+      community.docker.docker_container_copy_into:
+        container: datadog-agent
+        docker_host: "{{ docker_host }}"
+        container_path: /etc/datadog-agent/conf.d/http_check.d/conf.yaml
+        mode: "0644"
+        content: |
+          init_config:
+          instances:
+            - name: "{{ inventory_hostname }}"
+              url: http://localhost:3000/
+              tags:
+                - "instance:{{ inventory_hostname }}"
+
+    - name: Restart Datadog agent to load the check
+      community.docker.docker_container:
+        name: datadog-agent
+        docker_host: "{{ docker_host }}"
+        restart: true

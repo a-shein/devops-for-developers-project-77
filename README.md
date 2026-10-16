@@ -45,6 +45,7 @@ make plan      # посмотреть изменения
 make apply     # создать инфраструктуру
 make prepare   # инвентори из Terraform, коллекции Ansible, образ приложения на серверах
 make deploy    # запустить приложение на серверах (ansible/playbook.yml, --tags deploy)
+make monitoring # агент Datadog на серверах (http_check приложения)
 make destroy   # удалить инфраструктуру
 ```
 
@@ -59,6 +60,10 @@ make destroy   # удалить инфраструктуру
 Реальный домен не регистрировался (платно), используется зарезервированная зона `project77.test`. Terraform поднимает локальный DNS-сервер (CoreDNS, `terraform/dns.tf`) с A-записью домена на балансировщик, а сертификат балансировщика выписан на этот домен. `make check-domain` проверяет запись через `dig` и HTTPS-запрос с проверкой сертификата.
 
 Чтобы открыть домен в браузере, добавьте его в hosts: `echo "127.0.0.1 project77.test" | sudo tee -a /etc/hosts`
+
+## Мониторинг
+
+Агент Datadog ставится на серверы через Ansible (`make monitoring`) и каждые 15 секунд делает HTTP-запрос к приложению (`http_check`). Terraform (`terraform/monitoring.tf`) создаёт в Datadog по монитору `http.can_connect` на каждый сервер. Ключи `vault_dd_api_key` и `vault_dd_app_key` хранятся в `ansible/vault.yml`, сайт Datadog задаётся `dd_site` (`ansible/group_vars/webservers.yml`) и `dd_api_url` (Terraform).
 
 Секреты: `make vault-edit` правит `ansible/vault.yml`; `ansible/secrets.yml` рендерит `terraform/secrets.auto.tfvars` (файл в `.gitignore`).
 
